@@ -1,0 +1,4 @@
+ALTER TABLE `events` ADD `visible` ENUM('M','F','B') NOT NULL AFTER `logitude`;
+ALTER TABLE `events` ADD `minAge` VARCHAR(255) NOT NULL AFTER `no_person`, ADD `maxAge` VARCHAR(255) NOT NULL AFTER `minAge`;
+ALTER TABLE `events` ADD `Category` VARCHAR(255) NOT NULL AFTER `image`, ADD `MaxDistance` VARCHAR(255) NOT NULL AFTER `Category`;
+
