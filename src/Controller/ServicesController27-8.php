@@ -9,7 +9,7 @@ use Cake\Utility\Security;
 use App\Component\FileController;
 use Cake\Mailer\Email;
 use Cake\Datasource\ConnectionManager;
-class ServicesController  extends AppController
+class ServicesController extends AppController
 {
  /*
  Controller:ServicesController
@@ -873,10 +873,9 @@ class ServicesController  extends AppController
 		 @$mindate=$this->request->data["mindate"];
 		 @$maxdate=$this->request->data["maxdate"];
 		 @$maxtime=$this->request->data["maxtime"];
-		 @$category=$this->request->data["Category"];
+		 @$category=$this->request->data["category"];
 		 @$sex=$this->request->data["sex"];
-		 @$minage=$this->request->data["minage"];
-		 @$maxage=$this->request->data["maxage"];
+		 @$age=$this->request->data["age"];
 		 $offset=$this->request->data["offset"];
 		
 		 $latitude=$this->request->data["latitude"];
@@ -916,17 +915,17 @@ class ServicesController  extends AppController
 			$tableName="events";
 			$where='';
 			$dist = 10; // This is the maximum distance (in miles) away from $origLat, $origLon in which to search
-			if(!empty($distance)|| !empty($category) || !empty($minage) || !empty($mindate)|| !empty($maxdate) || !empty($mintime) || !empty($maxtime) || !empty($sex) || !empty($age)){
+			if(!empty($distance)|| !empty($category)|| !empty($mindate)|| !empty($maxdate) || !empty($mintime) || !empty($maxtime) || !empty($sex) || !empty($age)){
 				if(!empty($distance)){
 				$dist = $distance;	
 				}else{
 			    $dist = 10;
 				}
 				if(!empty($mintime) && !empty($maxtime)){
-				$where .= " and start_time>='$mintime' and end_time<='$maxtime'";	
+				$where .= " and start_time<=$mintime and end_time>=$maxtime";	
 				}
 				if(!empty($mindate) && !empty($maxdate)){
-				$where .= " and start_date>=$mindate and end_date<=$maxdate";	
+				$where .= " and start_date<=$mindate and end_date>=$maxdate";	
 				}
 				if(!empty($sex)){
 					if(!empty($where)){
@@ -936,11 +935,10 @@ class ServicesController  extends AppController
 				$where .= " and visible='$sex' ";	
 					}
 				}
-				if(!empty($minage)){
-				$where .= " and (minAge between $minage and $maxage) or (minAge>=$minage or maxAge<=$maxage)";
+				if(!empty($age)){
+				$where .= " and minAge>=$age and maxAge<=$age";
 				
-				}
-				if(!empty($category)){
+				}if(!empty($category)){
 				$where .= " and Category IN ($category)";
 				
 				}
@@ -976,33 +974,8 @@ class ServicesController  extends AppController
 			$imagetable=TableRegistry::get("Images");
 			if(!empty($results)){
 			foreach($results as $resultsn){
-				$jointable=TableRegistry::get("JoinEvent");
-		 $query=$jointable->find('all',['conditions'=>['JoinEvent.status'=>'confirm','JoinEvent.event_id'=>$resultsn["id"]]]);
-		 $joinlist = $query->toArray();
-		 
-		 $reciverid="";
-		 if(!empty($joinlist)){
-			 foreach($joinlist as $joinlists){
-				 if($joinlists->sender_id!=$resultsn["user_id"]){
-					$reciverid[]= $joinlists->sender_id;
-				 }else{
-					 $reciverid[]= $joinlists->reciever_id;
-				 }
-			 }
-			 
-		 }
-		 $userlistcountM= $userlistcountF=0;
-		 $usertable=TableRegistry::get("Users");
-		 if(!empty($reciverid)){
-		 $query=$usertable->find('all',['conditions'=>['Users.id IN'=>$reciverid,'Users.gender'=>'M']]);
-		 $userlistcountM = $query->count();
-		 $query=$usertable->find('all',['conditions'=>['Users.id IN'=>$reciverid,'Users.gender'=>'F']]);
-		 $userlistcountF = $query->count();
-		 }
 			$results[$i]["id"]=!empty($resultsn["id"])?$resultsn["id"]:"";
 			$results[$i]["name"]=!empty($resultsn["name"])?$resultsn["name"]:"";
-			$results[$i]["num_male"]=!empty($userlistcountM)?($userlistcountM):"0";
-			$results[$i]["num_female"]=!empty($userlistcountF)?($userlistcountF):"0";
 			$results[$i]["description"]=!empty($resultsn["description"])?$resultsn["description"]:"";
 			$results[$i]["user_id"]=!empty($resultsn["user_id"])?$resultsn["user_id"]:"";
 			$results[$i]["start_time"]=!empty($resultsn["start_time"])?$resultsn["start_time"]:"";
@@ -1157,43 +1130,6 @@ class ServicesController  extends AppController
 		 $imagetable=TableRegistry::get("Images");
 		 $query=$imagetable->find('all',['conditions'=>['Images.event_id'=>$eventid]]);
 		 $imglist = $query->toArray();
-		 $jointable=TableRegistry::get("JoinEvent");
-		 $query=$jointable->find('all',['conditions'=>['JoinEvent.status'=>'confirm','JoinEvent.event_id'=>$eventid]]);
-		 $joinlist = $query->toArray();
-		 
-		 
-		 if(!empty($joinlist)){
-			 foreach($joinlist as $joinlists){
-				 if($joinlists->sender_id!=$userid){
-					$reciverid[]= $joinlists->sender_id;
-				 }else{
-					 $reciverid[]= $joinlists->reciever_id;
-				 }
-			 }
-			 
-		 }
-		 if(!empty($reciverid)){
-	    // $reciverid=implode(",",$reciverid);		 
-		 
-		 $usertable=TableRegistry::get("Users");
-		 $query=$usertable->find('all',['conditions'=>['Users.id IN'=>$reciverid]]);
-		 $userlist = $query->toArray();
-		 }
-		 $i=0;
-		 $userinfo=array();
-		 if(!empty($userlist)){
-			 foreach($userlist as $userlists){
-				 $userinfo[$i]["id"]=$userlists["id"];
-				 $userinfo[$i]["name"]=$userlists["name"];
-				 
-				 if($userlists["type"]=="puzzle"){
-		  $userinfo[$i]["image"] =!empty($userlists["image"])?BASE_URL."/upload/".$userlists["image"]:"";
-		  }else{
-		  $userinfo[$i]["image"]=!empty($userlists["image"])?$userlists["image"]:"";
-		  }
-				 $i++;
-			 }
-		 }
 		 $response["Eventinfo"]["id"]=$eventlist[0]->id;
 		 $response["Eventinfo"]["name"]=$eventlist[0]->name;
 		 $response["Eventinfo"]["description"]=$eventlist[0]->description;
@@ -1207,8 +1143,6 @@ class ServicesController  extends AppController
 		 $response["Eventinfo"]["latitude"]=$eventlist[0]->latitude;
 		 $response["Eventinfo"]["logitude"]=$eventlist[0]->logitude;
 		 $response["Eventinfo"]["visible"]=$eventlist[0]->visible;
-		 $response["Eventinfo"]["joinuser"]=$userinfo;
-		 $images=array();
 		 $i=0;
 		 if(!empty($imglist)){
 			 foreach($imglist as $imglists){

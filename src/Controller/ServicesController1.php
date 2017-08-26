@@ -747,4 +747,290 @@ class ServicesController extends AppController
           exit;
 	 }
 	 }
+	  public function eventimages(){
+		 $this->autoRender=false;
+	     if($this->request->ispost()){
+	
+		 $token=$this->request->data["token"];
+		 $eventid=$this->request->data["eventid"];
+		  if(empty($token)){
+	      $response["message"]="Token can not be empty.";
+	      $response["status"]="failure";
+	      echo json_encode($response);
+          exit;		  
+		 }
+		 if(empty($eventid)){
+	      $response["message"]="Eventid can not be empty.";
+	      $response["status"]="failure";
+	      echo json_encode($response);
+          exit;		  
+		 }
+		 $userid=$this->checktoken($token);
+		 if(empty($userid)){
+	      $response["message"]="Invalid User.";
+	      $response["status"]="failure";
+	      echo json_encode($response);
+          exit;		  
+		 }
+		 if(empty($_FILES["image"]["name"])){
+	      $response["message"]="Please select image.";
+	      $response["status"]="failure";
+	      echo json_encode($response);
+          exit;	
+		 }
+		 $imagetable=TableRegistry::get("Images");
+		 $img=$imagetable->newEntity();
+		 if(!empty($_FILES["image"]["tmp_name"])){
+		$files=date("his").$_FILES["image"]["name"];
+		$img->image=$files;
+		$img->event_id=$eventid;
+		$img->createdOn=date("Y-m-d H:i:s");
+		$img->updatedOn=date("Y-m-d H:i:s");
+		if(move_uploaded_file($_FILES["image"]["tmp_name"],$_SERVER["DOCUMENT_ROOT"]."/webroot/upload/".$files)){
+		}
+		}
+				
+		if(!empty($img->image)){
+		$result=$imagetable->save($img);
+		$response["Eventinfo"]=$img;
+		
+		$response["Eventinfo"]["image"]=!empty($files)?BASE_URL."/upload/".$files:"";
+		
+		$response["message"]="Event Image upoaded successfully.";
+		$response["status"]="success";
+		echo json_encode($response);
+		exit;
+		}
+	 }else{
+		  $response["message"]="Something went wrong.";
+	      $response["status"]="failure";
+	      echo json_encode($response);
+          exit;
+	 }
+	 }
+	 public function eventinfo(){
+		 $this->autoRender=false;
+	     if($this->request->ispost()){
+	
+		 $token=$this->request->data["token"];
+		 $eventid=$this->request->data["eventid"];
+		  if(empty($token)){
+	      $response["message"]="Token can not be empty.";
+	      $response["status"]="failure";
+	      echo json_encode($response);
+          exit;		  
+		 }
+		 if(empty($eventid)){
+	      $response["message"]="Eventid can not be empty.";
+	      $response["status"]="failure";
+	      echo json_encode($response);
+          exit;		  
+		 }
+		 $userid=$this->checktoken($token);
+		 if(empty($userid)){
+	      $response["message"]="Invalid User.";
+	      $response["status"]="failure";
+	      echo json_encode($response);
+          exit;		  
+		 }
+		 $evnttable=TableRegistry::get("Events");
+		 $query=$evnttable->find('all',['conditions'=>['Events.id'=>$eventid]]);
+		 $eventlist = $query->toArray();
+		 if(!empty($eventlist)){
+		 $imagetable=TableRegistry::get("Images");
+		 $query=$imagetable->find('all',['conditions'=>['Images.event_id'=>$eventid]]);
+		 $imglist = $query->toArray();
+		 $jointable=TableRegistry::get("JoinEvent");
+		 $query=$jointable->find('all',['conditions'=>['JoinEvent.event_id'=>$eventid]]);
+		 $joinlist = $query->toArray();
+		 
+		 print_r($joinlist);die;
+		 if(!empty($joinlist)){
+			 
+		 }
+		 $response["Eventinfo"]["id"]=$eventlist[0]->id;
+		 $response["Eventinfo"]["name"]=$eventlist[0]->name;
+		 $response["Eventinfo"]["description"]=$eventlist[0]->description;
+		 $response["Eventinfo"]["start_time"]=$eventlist[0]->start_time;
+		 $response["Eventinfo"]["end_time"]=$eventlist[0]->end_time;
+		 $response["Eventinfo"]["start_date"]=$eventlist[0]->start_date;
+		 $response["Eventinfo"]["end_date"]=$eventlist[0]->end_date;
+		 $response["Eventinfo"]["address"]=$eventlist[0]->address;
+		 $response["Eventinfo"]["price"]=$eventlist[0]->price;
+		 $response["Eventinfo"]["no_person"]=$eventlist[0]->no_person;
+		 $response["Eventinfo"]["latitude"]=$eventlist[0]->latitude;
+		 $response["Eventinfo"]["logitude"]=$eventlist[0]->logitude;
+		 $response["Eventinfo"]["visible"]=$eventlist[0]->visible;
+		 $i=0;
+		 if(!empty($imglist)){
+			 foreach($imglist as $imglists){
+				 $files=$imglists->image;
+				$images[$i]["image"]= !empty($files)?BASE_URL."/upload/".$files:"";
+				$images[$i]["id"]= $imglists->id;
+				$i++;
+			 }
+		 }
+		 $response["Eventinfo"]["image"]=$images;
+	    $response["message"]="Event List.";
+	     $response["status"]="success";
+	      echo json_encode($response);
+          exit;
+		 }
+		 else{
+		  $response["message"]="Event does not exists";
+	      $response["status"]="failure";
+	      echo json_encode($response);
+          exit;
+	 }
+		 }
+		 else{
+		  $response["message"]="Something went wrong.";
+	      $response["status"]="failure";
+	      echo json_encode($response);
+          exit;
+	 }
+	 }
+	 public function getprofile(){
+		  $this->autoRender=false;
+	     if($this->request->ispost()){
+	
+		 $token=$this->request->data["token"];
+		 $id=$this->request->data["id"];
+		  if(empty($token)){
+	      $response["message"]="Token can not be empty.";
+	      $response["status"]="failure";
+	      echo json_encode($response);
+          exit;		  
+		 }
+		 if(empty($id)){
+	      $response["message"]="Userid can not be empty.";
+	      $response["status"]="failure";
+	      echo json_encode($response);
+          exit;		  
+		 }
+		 $userid=$this->checktoken($token);
+		 if(empty($userid)){
+	      $response["message"]="Invalid User.";
+	      $response["status"]="failure";
+	      echo json_encode($response);
+          exit;		  
+		 }
+		 $usertable=TableRegistry::get("Users");
+		 $query=$usertable->find('all',['conditions'=>['Users.id'=>$id]]);
+		 $userlist = $query->toArray();
+		 //print_r($userlist);die;
+		 if(!empty($userlist)){
+		  $user["Userinfo"]["id"] =$userlist[0]->id;
+		  $user["Userinfo"]["name"] =$userlist[0]->name;
+		  $user["Userinfo"]["email"] =$userlist[0]->email;
+		  $user["Userinfo"]["address"] =$userlist[0]->address;
+		  $user["Userinfo"]["gender"] =$userlist[0]->gender;
+		  $user["Userinfo"]["age"] =$userlist[0]->age;
+		  $user["Userinfo"]["mobile"] =$userlist[0]->mobile;
+		  $user["Userinfo"]["city"] =$userlist[0]->city;
+		  $user["Userinfo"]["facebook_id"] =$userlist[0]->facebook_id;
+		  $user["Userinfo"]["instagram_id"] =$userlist[0]->instagram_id;
+		  if($userlist[0]->type=="puzzle"){
+		  $user["Userinfo"]["image"] =!empty($userlist[0]->image)?BASE_URL."/upload/".$userlist[0]->image:"";
+		  }else{
+		  $user["Userinfo"]["image"] =!empty($userlist[0]->image)?$userlist[0]->image:"";
+		  }
+		  $response["Userinfo"]=$user["Userinfo"];
+		  $response["message"]="User info.";
+	      $response["status"]="success";
+	      echo json_encode($response);
+          exit;
+		 }else{
+		  $response["message"]="User does not exists.";
+	      $response["status"]="failure";
+	      echo json_encode($response);
+          exit;
+	 }
+		 }else{
+		  $response["message"]="Something went wrong.";
+	      $response["status"]="failure";
+	      echo json_encode($response);
+          exit;
+	 }
+	 }
+	 
+	 public function joinEvent(){
+		  $this->autoRender=false;
+	     if($this->request->ispost()){
+	
+		 $token=$this->request->data["token"];
+		 $evntid=$this->request->data["evntid"];
+		 $notifymessage=$this->request->data["notifymessage"];
+		 $no_person=$this->request->data["no_person"];
+		  if(empty($token)){
+	      $response["message"]="Token can not be empty.";
+	      $response["status"]="failure";
+	      echo json_encode($response);
+          exit;		  
+		 }
+		 if(empty($evntid)){
+	      $response["message"]="Eventid can not be empty.";
+	      $response["status"]="failure";
+	      echo json_encode($response);
+          exit;		  
+		 }
+		 $userid=$this->checktoken($token);
+		 if(empty($userid)){
+	      $response["message"]="Invalid User.";
+	      $response["status"]="failure";
+	      echo json_encode($response);
+          exit;		  
+		 }
+		 if(empty($notifymessage)){
+	    /*  $response["message"]="Please enter message.";
+	      $response["status"]="failure";
+	      echo json_encode($response);
+          exit;		*/  
+		 }
+		 $joinEventtable=TableRegistry::get("JoinEvent");
+		 
+		 $eventtable=TableRegistry::get("Events");
+		 $getevent = $eventtable->get($evntid);
+		 if(empty($getevent)){
+	      $response["message"]="Evet does not exist.";
+	      $response["status"]="failure";
+	      echo json_encode($response);
+          exit;		  
+		 }
+		 
+		 $query=$joinEventtable->find('all',['conditions'=>['JoinEvent.event_id'=>$evntid,"OR"=>['JoinEvent.sender_id'=>$userid,'JoinEvent.reciever_id'=>$userid]]]);
+		 $getjoinlist = $query->toArray();
+		 
+		 if(empty($getjoinlist))
+		 $joinEvent=$joinEventtable->newEntity();
+	 else{
+		 
+		 $joinEvent = $joinEventtable->get($getjoinlist[0]->id);
+	 }
+		 $joinEvent->event_id=$evntid;
+		 $joinEvent->message=!empty($notifymessage)?$notifymessage:'';
+		 $joinEvent->user_id=$getevent->user_id;
+		 $joinEvent->sender_id=$userid;
+		 $joinEvent->reciever_id=$getevent->user_id;
+		 $joinEvent->no_perso=$no_person;
+		 if(!empty($getjoinlist)){
+		 $joinEvent->status="confirm";
+		 }else{
+		 $joinEvent->status="pending";
+		 }
+		 $joinEvent->createdOn=date("Y-m-d H:i:s");
+		 $joinEvent->updatedOn=date("Y-m-d H:i:s");
+		
+		 $result=$joinEventtable->save($joinEvent);
+		 $response["message"]="Invite send successfully.";
+	     $response["status"]="success";
+	      echo json_encode($response);
+          exit;
+		  }else{
+		  $response["message"]="Something went wrong.";
+	      $response["status"]="failure";
+	      echo json_encode($response);
+          exit;
+	 }
+	 }
 }
